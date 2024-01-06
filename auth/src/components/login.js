@@ -1,19 +1,49 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
-import { Grid, Paper, Typography,Button } from '@mui/material';
+import {
+  Grid, Paper, Typography, Button
+} from '@mui/material';
 import AuthFormInputs from './shared/AuthFormInputs';
+import { signInWithEmailAndPassword } from "@firebase/auth";
+import { auth } from './firebase';
+import Swal from 'sweetalert2';
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const formik = useFormik({
     initialValues: {
       email: '',
       password: '',
     },
-    onSubmit: values => {
-      // FIREBASE login logic
+    onSubmit: async (values) => {
+      try {
+        // Basic email validation
+        if (!values.email.trim()) {
+          throw new Error('Email is required');
+        }
+
+        // Basic password validation
+        if (!values.password.trim()) {
+          throw new Error('Password is required');
+        }
+
+        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+        const user = userCredential.user;
+        console.log('User signed in successfully:', user);
+        navigate("/page");
+      } catch (error) {
+        console.error('Error signing in:', error);
+        if (error.code === 'auth/invalid-credential') {
+          Swal.fire({
+            icon: 'error',
+            title: 'cant login',
+            text: 'Please check your email and password.',
+          });
+        }
+      }
     },
   });
 

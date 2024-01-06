@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useFormik } from 'formik';
 import { Grid, Paper, Typography, FormControl, InputLabel, Input, Button } from '@mui/material';
+import { sendPasswordResetEmail } from 'firebase/auth'; 
+import { auth } from './firebase'; 
 
 const ResetPassword = () => {
   const [resetSuccess, setResetSuccess] = useState(false);
@@ -13,10 +15,7 @@ const ResetPassword = () => {
     },
     onSubmit: async (values) => {
       try {
-        // ربط مع Firebase وتنفيذ الطلب لإعادة تعيين كلمة المرور
-        // يمكنك استخدام Firebase Authentication لهذا الغرض
-        // firebase.auth().sendPasswordResetEmail(values.email);
-        // قم بتحديث حالة resetSuccess بعد النجاح
+        await sendPasswordResetEmail(auth, values.email);
         setResetSuccess(true);
       } catch (error) {
         console.error('Error resetting password:', error.message);

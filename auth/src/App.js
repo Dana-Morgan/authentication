@@ -4,6 +4,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import Login from './components/login.js';
 import ResetPassword from './components/resetpass.js'; 
 import SignUpForm from './components/signup.js';
+import Page from './components/page.js';
 
 const router = createBrowserRouter([
   {
@@ -14,6 +15,11 @@ const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignUpForm/>
+  },
+  
+  {
+    path: '/page',
+    element: <Page/>
   },
 
   {
