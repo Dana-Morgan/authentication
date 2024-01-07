@@ -1,22 +1,28 @@
+// SignUpForm.js
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useFormik } from 'formik';
 import {
-Grid,Paper,Typography,Button,FormControl,InputLabel,Input,InputAdornment,IconButton}from '@mui/material';
+  Grid, Paper, Typography, Button, FormControl, InputLabel, Input, FormHelperText, InputAdornment, IconButton
+} from '@mui/material';
 import { createUserWithEmailAndPassword } from "@firebase/auth";
 import { auth } from './firebase';
 import Swal from 'sweetalert2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { validationSchema } from './validation/valid';
 
 const SignUpForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+
   const formik = useFormik({
     initialValues: {
       email: '',
       password: '',
     },
+    validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
+        await validationSchema.validate(values, { abortEarly: false });
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
         const user = userCredential.user;
         console.log('User signed up successfully:', user);
@@ -27,12 +33,17 @@ const SignUpForm = () => {
           text: 'User signed up successfully',
         });
       } catch (error) {
+        if (error.name === 'ValidationError') {
+          console.error('Validation Error:', error.errors);
+          return;
+        }
+
         console.error('Error signing up:', error.message);
 
         Swal.fire({
           icon: 'error',
-          title: 'cant sign in',
-          text: 'email already in use',
+          title: 'Error!',
+          text: 'This account has already been registered',
         });
       }
     },
@@ -50,7 +61,7 @@ const SignUpForm = () => {
             Sign Up
           </Typography>
           <form onSubmit={formik.handleSubmit}>
-            <FormControl fullWidth margin="normal">
+            <FormControl fullWidth margin="normal" error={formik.touched.email && Boolean(formik.errors.email)}>
               <InputLabel htmlFor="email">Email</InputLabel>
               <Input
                 type="email"
@@ -60,8 +71,9 @@ const SignUpForm = () => {
                 onBlur={formik.handleBlur}
                 name="email"
               />
+              <FormHelperText>{formik.touched.email && formik.errors.email}</FormHelperText>
             </FormControl>
-            <FormControl fullWidth margin="normal">
+            <FormControl fullWidth margin="normal" error={formik.touched.password && Boolean(formik.errors.password)}>
               <InputLabel htmlFor="password">Password</InputLabel>
               <Input
                 type={showPassword ? 'text' : 'password'}
@@ -78,6 +90,7 @@ const SignUpForm = () => {
                   </InputAdornment>
                 }
               />
+              <FormHelperText>{formik.touched.password && formik.errors.password}</FormHelperText>
             </FormControl>
             <Button variant="contained" color="primary" type="submit">
               Sign Up

@@ -1,13 +1,15 @@
+// LoginForm.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import {
-  Grid, Paper, Typography, Button
+  Grid, Paper, Typography, Button, FormControl, InputLabel, Input, FormHelperText, InputAdornment, IconButton
 } from '@mui/material';
-import AuthFormInputs from './shared/AuthFormInputs';
 import { signInWithEmailAndPassword } from "@firebase/auth";
 import { auth } from './firebase';
 import Swal from 'sweetalert2';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { validationSchema } from './validation/valid';
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,28 +20,27 @@ const LoginForm = () => {
       email: '',
       password: '',
     },
+    validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
-        // Basic email validation
-        if (!values.email.trim()) {
-          throw new Error('Email is required');
-        }
-
-        // Basic password validation
-        if (!values.password.trim()) {
-          throw new Error('Password is required');
-        }
-
+        await validationSchema.validate(values, { abortEarly: false });
         const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
         const user = userCredential.user;
         console.log('User signed in successfully:', user);
+
         navigate("/page");
       } catch (error) {
+        if (error.name === 'ValidationError') {
+          console.error('Validation Error:', error.errors);
+          return;
+        }
+
         console.error('Error signing in:', error);
+
         if (error.code === 'auth/invalid-credential') {
           Swal.fire({
             icon: 'error',
-            title: 'cant login',
+            title: 'Account Not Found',
             text: 'Please check your email and password.',
           });
         }
@@ -59,11 +60,37 @@ const LoginForm = () => {
             Login
           </Typography>
           <form onSubmit={formik.handleSubmit}>
-            <AuthFormInputs
-              formik={formik}
-              showPassword={showPassword}
-              handleTogglePassword={handleTogglePassword}
-            />
+            <FormControl fullWidth margin="normal" error={formik.touched.email && Boolean(formik.errors.email)}>
+              <InputLabel htmlFor="email">Email</InputLabel>
+              <Input
+                type="email"
+                id="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                name="email"
+              />
+              <FormHelperText>{formik.touched.email && formik.errors.email}</FormHelperText>
+            </FormControl>
+            <FormControl fullWidth margin="normal" error={formik.touched.password && Boolean(formik.errors.password)}>
+              <InputLabel htmlFor="password">Password</InputLabel>
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                name="password"
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton onClick={handleTogglePassword} edge="end">
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+              <FormHelperText>{formik.touched.password && formik.errors.password}</FormHelperText>
+            </FormControl>
             <Button variant="contained" color="primary" type="submit">
               Login
             </Button>
