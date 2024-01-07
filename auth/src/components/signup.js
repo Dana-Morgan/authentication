@@ -8,7 +8,7 @@ import {
 import { createUserWithEmailAndPassword } from "@firebase/auth";
 import { auth } from './firebase';
 import Swal from 'sweetalert2';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Autorenew } from '@mui/icons-material';
 import { validationSchema } from './validation/valid';
 
 const SignUpForm = () => {
@@ -53,6 +53,11 @@ const SignUpForm = () => {
     setShowPassword(!showPassword);
   };
 
+  const generatePassword = () => {
+    const randomPassword = Math.random().toString(36).slice(-8);
+    formik.setValues({ ...formik.values, password: randomPassword });
+  };
+
   return (
     <Grid container justifyContent="center" alignItems="center" height="100vh">
       <Grid item>
@@ -84,8 +89,11 @@ const SignUpForm = () => {
                 name="password"
                 endAdornment={
                   <InputAdornment position="end">
-                    <IconButton onClick={handleTogglePassword} edge="end">
+                    <IconButton onClick={handleTogglePassword} edge="end" style={{ position: 'relative' }}>
                       {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                    <IconButton onClick={generatePassword} edge="end" style={{ position: 'relative' }}>
+                      <Autorenew />
                     </IconButton>
                   </InputAdornment>
                 }
